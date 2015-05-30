@@ -3,6 +3,7 @@ from proto import PrimitiveProtos_pb2
 from proto import TajoMasterClientProtocol_pb2 as client
 from proto import ClientProtos_pb2
 
+# for auto completion
 import rlcompleter, readline
 readline.parse_and_bind('tab:complete')
 
