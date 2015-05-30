@@ -7,7 +7,7 @@ It is implmeneted in Python 2.7 and uses grpc (https://github.com/grpc/grpc) to 
  * Hyunsik Choi (hyunsik dot choi at gmail dot com)
 
 # License
- * Apache License 2.0
+ * [Apache License 2.0] (http://www.apache.org/licenses/LICENSE-2.0)
 
 # Prerequisites
 
