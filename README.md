@@ -6,6 +6,9 @@ It is implmeneted in Python 2.7 and uses grpc (https://github.com/grpc/grpc) to 
 # Authors
  * Hyunsik Choi (hyunsik dot choi at gmail dot com)
 
+# License
+ * Apache License 2.0
+
 # Prerequisites
 
 * Install Apache Tajo 0.11.0-SNAPSHOT
