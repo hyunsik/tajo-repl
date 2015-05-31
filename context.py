@@ -53,13 +53,22 @@ class TajoContext:
 
     def session_id(self): return self.sessionId
 
-
-    def current_db(self):
+    def session_var(self, name):
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.SessionedStringProto(sessionId = sessionId, value=name)
 
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
-            res = stub.getCurrentDatabase(sessionId, self.TIMEOUT_SECONDS)
+            res = stub.getSessionVariable(request, self.TIMEOUT_SECONDS)
             return res.value
+
+    def user(self):
+        return self.session_var("USERNAME")
+
+    def current_tz(self):
+        return self.session_var("TIMEZONE")
+
+    def current_db(self):
+        return self.session_var("CURRENT_DATABASE")
 
 
     def ls_dbs(self):
@@ -97,6 +106,38 @@ class TajoContext:
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
             res = stub.getTableList(request, self.TIMEOUT_SECONDS)
             return res.tables
+
+
+    def running_jobs(self):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.GetQueryListRequest(sessionId = sessionId)
+
+        query_Ids = []
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.getRunningQueryList(request, self.TIMEOUT_SECONDS)
+
+            for index, item in enumerate(res.queryList):
+                query_Ids.append(item.queryId)
+
+            return query_Ids
+
+
+    @staticmethod
+    def __convert_query_id__(queryid):
+        return 'q_' + queryid.id + '_{}'.format(queryid.seq)
+
+    def finished_jobs(self):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.GetQueryListRequest(sessionId = sessionId)
+
+        query_Ids = []
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.getFinishedQueryList(request, self.TIMEOUT_SECONDS)
+
+            for index, item in enumerate(res.queryList):
+                query_Ids.append(TajoContext.__convert_query_id__(item.queryId))
+
+            return query_Ids
 
 
     def from_table(self, name):
