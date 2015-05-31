@@ -34,12 +34,14 @@ class TajoContext:
 
     TIMEOUT_SECONDS = 3
 
+
     def __init__(self, host="localhost", port=28002):
         self.host = host
         self.port = port
 
         self.username = getpass.getuser()
         self.__update_session__()
+
 
     def __update_session__(self):
         request = ClientProtos_pb2.CreateSessionRequest(username=self.username, baseDatabaseName="default")
@@ -48,7 +50,9 @@ class TajoContext:
             session = stub.createSession(request, self.TIMEOUT_SECONDS)
             self.sessionId = session.sessionId.id;
 
+
     def session_id(self): return self.sessionId
+
 
     def current_db(self):
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
@@ -57,12 +61,43 @@ class TajoContext:
             res = stub.getCurrentDatabase(sessionId, self.TIMEOUT_SECONDS)
             return res.value
 
-    def list_db(self):
+
+    def ls_dbs(self):
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
 
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
             res = stub.getAllDatabases(sessionId, self.TIMEOUT_SECONDS)
             return res.values
+
+
+    def ch_db(self, db_name):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.SessionedStringProto(sessionId = sessionId, value=db_name)
+
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.selectDatabase(request, self.TIMEOUT_SECONDS)
+            return res.value
+
+    def exist_db(self, db_name):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.SessionedStringProto(sessionId = sessionId, value=db_name)
+
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.existDatabase(request, self.TIMEOUT_SECONDS)
+            return res.value
+
+
+    def ls_tables(self, db_name=None):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+        request = ClientProtos_pb2.GetTableListRequest(sessionId = sessionId)
+
+        if db_name != None:
+            request.databaseName = db_name
+
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.getTableList(request, self.TIMEOUT_SECONDS)
+            return res.tables
+
 
     def from_table(self, name):
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
