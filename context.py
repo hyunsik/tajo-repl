@@ -32,6 +32,8 @@ class TajoContext:
     username = ""
     sessionId = ""
 
+    TIMEOUT_SECONDS = 3
+
     def __init__(self, host="localhost", port=28002):
         self.host = host
         self.port = port
@@ -40,36 +42,42 @@ class TajoContext:
         self.__update_session__()
 
     def __update_session__(self):
-        _TIMEOUT_SECONDS = 10
         request = ClientProtos_pb2.CreateSessionRequest(username=self.username, baseDatabaseName="default")
 
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
-            session = stub.createSession(request, _TIMEOUT_SECONDS)
+            session = stub.createSession(request, self.TIMEOUT_SECONDS)
             self.sessionId = session.sessionId.id;
 
-    def session_id(self): self.sessionId
+    def session_id(self): return self.sessionId
 
     def current_db(self):
-        _TIMEOUT_SECONDS = 10
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
 
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
-            res = stub.getCurrentDatabase(sessionId, _TIMEOUT_SECONDS)
+            res = stub.getCurrentDatabase(sessionId, self.TIMEOUT_SECONDS)
             return res.value
 
+    def list_db(self):
+        sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
+
+        with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
+            res = stub.getAllDatabases(sessionId, self.TIMEOUT_SECONDS)
+            return res.values
+
     def from_table(self, name):
-        _TIMEOUT_SECONDS = 10
         sessionId = TajoIdProtos_pb2.SessionIdProto(id=self.sessionId)
         request = ClientProtos_pb2.GetTableDescRequest(sessionId=sessionId, tableName=name)
 
         with client.early_adopter_create_TajoMasterClientProtocolService_stub(self.host, self.port) as stub:
-            res = stub.getTableDesc(request, _TIMEOUT_SECONDS)
+            res = stub.getTableDesc(request, self.TIMEOUT_SECONDS)
             return DataFrame.convert_from_tabledesc(res.tableDesc)
 
 
-c = TajoContext();
-print c.sessionId
-print c.current_db()
-lineitem = c.from_table("lineitem")
-print lineitem.name
-print lineitem.uri
+# c = TajoContext();
+# print c.sessionId
+# print c.current_db()
+# lineitem = c.from_table("lineitem")
+# print lineitem.name
+# print lineitem.uri
+#
+# print lineitem.schema.fields
