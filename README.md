@@ -36,7 +36,7 @@ cd tajo-repl
 
 # How to use
 
-```
+```python
 hyunsik@workstation:~/Code/tajo/tajo-repl$ ./pytajo 
 Python 2.7.9 (default, Apr  2 2015, 15:33:21) 
 [GCC 4.9.2] on linux2
